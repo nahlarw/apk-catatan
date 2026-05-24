@@ -1,0 +1,126 @@
+/* VARIABEL TEMA */
+.theme-light {
+    --bg-color: #f2f2f7;
+    --panel-color: #ffffff;
+    --card-color: #e5e5ea;
+    --text-color: #000000;
+    --text-secondary: #6c6c70;
+    --accent-color: #d35400;
+    --danger-color: #c0392b;
+    --success-color: #27ae60;
+}
+
+.theme-dark {
+    --bg-color: #000000;
+    --panel-color: #161618;
+    --card-color: #252527;
+    --text-color: #ffffff;
+    --text-secondary: #8a8a8e;
+    --accent-color: #e59866;
+    --danger-color: #e74c3c;
+    --success-color: #2ecc71;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+body { background-color: #2c3e50; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--text-color); }
+.phone-container { width: 100%; max-width: 412px; height: 844px; background-color: var(--bg-color); position: relative; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+
+/* Header */
+.header { padding: 20px 16px 10px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+.header h1 { font-size: 24px; font-weight: 600; }
+.header-icons {display: flex; align-items: center; gap: 18px; }
+
+/* Search & Layout */
+.search-container { padding: 0 16px 12px 16px; display: none; }
+.search-container.active { display: block; }
+.search-box { width: 100%; background-color: var(--panel-color); border: none; padding: 10px 16px; border-radius: 10px; color: var(--text-color); outline: none; }
+.content-area { flex: 1; padding: 0 16px; overflow-y: auto; }
+.notes-grid.layout-kisi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding-bottom: 80px; }
+.notes-grid.layout-daftar { display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
+
+/* Note Cards */
+.note-card { background-color: var(--panel-color); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); }
+.layout-kisi .note-card { height: 160px; }
+.note-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.note-body { font-size: 13px; color: var(--text-secondary); display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; flex-grow: 1; }
+.note-body img { display: none; } /* Sembunyikan gambar besar di preview kartu grid */
+.note-body table { display: none; } /* Sembunyikan tabel di preview kartu grid */
+.layout-kisi .note-body { -webkit-line-clamp: 4; }
+.layout-daftar .note-body { -webkit-line-clamp: 2; }
+.note-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary); margin-top: 6px; }
+.delete-btn { color: var(--text-secondary); cursor: pointer; }
+.delete-btn:hover { color: var(--danger-color); }
+.restore-btn { color: var(--success-color); cursor: pointer; }
+
+/* FAB & Sidebar */
+.fab { position: absolute; bottom: 30px; right: 24px; width: 56px; height: 56px; background-color: var(--panel-color); border: 1px solid var(--card-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; z-index: 20; }
+.fab i { font-size: 22px; color: var(--text-color); }
+.sidebar { position: absolute; top: 0; left: -100%; width: 80%; height: 100%; background-color: var(--panel-color); z-index: 30; transition: left 0.3s ease; padding: 24px 16px; display: flex; flex-direction: column; }
+.sidebar.open { left: 0; }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.menu-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 15px; }
+.menu-item.active { background-color: var(--card-color); font-weight: 500; }
+.menu-item-left { display: flex; align-items: center; gap: 14px; }
+.divider { border-top: 1px dashed var(--card-color); margin: 12px 0; }
+.overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); z-index: 25; display: none; }
+.overlay.active { display: block; }
+
+/* Dropdowns */
+.dropdown-menu { position: absolute; top: 35px; right: 0; background-color: var(--panel-color); border: 1px solid var(--card-color); border-radius: 12px; min-width: 170px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 50; display: none; padding: 6px 0; }
+.dropdown-menu.show { display: block; }
+.dropdown-right { right: 0 !important; left: auto !important; }
+.dropdown-header { padding: 6px 14px; font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: bold; }
+.dropdown-item { padding: 10px 14px; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.dropdown-item:hover { background-color: var(--card-color); }
+
+/* Modal Edit */
+.modal { position: absolute; top: 100%; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 40; transition: top 0.3s ease; display: flex; flex-direction: column; padding: 20px 16px; }
+.modal.open { top: 0; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.btn-save { background: none; border: none; color: var(--accent-color); font-size: 16px; font-weight: 600; cursor: pointer; }
+.input-title { background: none; border: none; color: var(--text-color); font-size: 22px; font-weight: 600; margin-bottom: 10px; outline: none; }
+.select-folder { background-color: var(--panel-color); color: var(--text-color); border: none; padding: 6px 12px; border-radius: 8px; margin-bottom: 12px; outline: none; width: fit-content; font-size: 13px; }
+
+/* NEW STYLE: EDITOR TEXT & RICH-BODY */
+.editor-toolbar { display: flex; gap: 6px; background-color: var(--panel-color); padding: 8px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--card-color); }
+.editor-toolbar button { background: none; border: none; color: var(--text-color); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+.editor-toolbar button:hover { background-color: var(--card-color); }
+
+.input-body-rich { flex: 1; background-color: var(--panel-color); border-radius: 12px; padding: 14px; color: var(--text-color); outline: none; overflow-y: auto; line-height: 1.6; border: 1px solid var(--card-color); }
+.input-body-rich[placeholder]:empty:before { content: attr(placeholder); color: var(--text-secondary); }
+
+/* Struktur Khusus Objek Gambar, Tabel, Lukisan dalam Catatan */
+.input-body-rich img { max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block; }
+.input-body-rich table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+.input-body-rich table, .input-body-rich th, .input-body-rich td { border: 1px solid var(--text-secondary); padding: 8px; text-align: left; }
+
+/* SUBSIDIARY MODAL STYLE */
+.sub-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 60; display: none; justify-content: center; align-items: center; }
+.sub-modal-content { background-color: var(--panel-color); padding: 20px; border-radius: 20px; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+.sub-modal-content h4 { margin-bottom: 16px; font-size: 18px; }
+.table-prop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.table-prop-row input { width: 70px; padding: 6px; border-radius: 6px; border: 1px solid var(--card-color); background: var(--bg-color); color: var(--text-color); text-align: center; }
+.sub-modal-buttons { display: flex; justify-content: flex-end; gap: 16px; margin-top: 20px; }
+.sub-modal-buttons button { background: none; border: none; color: var(--text-textColor); font-size: 15px; cursor: pointer; }
+
+/* KANVAS STYLE */
+.canvas-container { width: 100%; height: 100%; background-color: #ffffff; display: flex; flex-direction: column; }
+.canvas-header { background-color: #1c1c1e; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+.canvas-header button, .canvas-footer button { background: none; border: none; color: #ffffff; font-size: 18px; cursor: pointer; }
+#paintCanvas { flex: 1; background-color: #fafafa; cursor: crosshair; touch-action: none; }
+.canvas-colors { display: flex; gap: 10px; }
+.color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+.color-dot.active { border-color: #ffffff; transform: scale(1.1); }
+.canvas-footer { background-color: #1c1c1e; padding: 14px 20px; display: flex; justify-content: space-between; }
+
+.input-body-rich ul, 
+.input-body-rich ol {
+    padding-left: 24px !important; 
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.input-body-rich li {
+    margin-bottom: 4px; 
+    color: var(--text-color);
+}

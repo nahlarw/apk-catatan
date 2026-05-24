@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Catatan Mobile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        const savedTheme = localStorage.getItem('appTheme') || 'light';
+        document.documentElement.className = savedTheme === 'dark' ? 'theme-dark' : 'theme-light';
+    </script>
+</head>
+<body> <div class="phone-container">
+        <div class="overlay" id="overlay" onclick="closeAllMenus()"></div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Kategori</h3>
+                <div class="settings-container">
+                    <i class="fas fa-cog" onclick="toggleSettingsMenu(event)"></i>
+                    <div class="dropdown-menu" id="settingsDropdown">
+                        <div class="dropdown-item" onclick="changeTheme('dark')"><i class="fas fa-moon"></i> Tampilan Gelap</div>
+                        <div class="dropdown-item" onclick="changeTheme('light')"><i class="fas fa-sun"></i> Tampilan Biasa</div>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item active" onclick="filterCategory('all', this)">
+                <div class="menu-item-left"><i class="far fa-file-alt"></i> Semua catatan</div>
+                <div class="menu-count" id="count-all">0</div>
+            </div>
+            <div class="menu-item" onclick="filterCategory('Favorit', this)">
+                <div class="menu-item-left"><i class="far fa-star"></i> Favorit</div>
+                <div class="menu-count" id="count-fav">0</div>
+            </div>
+            <div class="divider"></div>
+            <div class="menu-item" onclick="filterCategory('Kerja', this)">
+                <div class="menu-item-left"><i class="far fa-folder"></i> Kerja</div>
+                <div class="menu-count" id="count-kerja">0</div>
+            </div>
+            <div class="menu-item" onclick="filterCategory('Pribadi', this)">
+                <div class="menu-item-left"><i class="far fa-folder"></i> Pribadi</div>
+                <div class="menu-count" id="count-pribadi">0</div>
+            </div>
+            <div class="menu-item" onclick="filterCategory('Kuliah', this)">
+                <div class="menu-item-left"><i class="far fa-folder"></i> Kuliah</div>
+                <div class="menu-count" id="count-kuliah">0</div>
+            </div>
+            <div class="divider"></div>
+            <div class="menu-item" onclick="filterCategory('Sampah', this)">
+                <div class="menu-item-left"><i class="far fa-trash-alt"></i> Sampah</div>
+                <div class="menu-count" id="count-trash">0</div>
+            </div>
+        </div>
+
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <i class="fas fa-bars" onclick="toggleSidebar()" style="font-size: 20px; cursor: pointer;"></i>
+                <h1 id="current-view-title">Semua catatan</h1>
+            </div>
+            <div class="header-icons">
+                <i class="fas fa-search" onclick="toggleSearch()"></i>
+                <div style="position: relative; display: inline-block;">
+                    <i class="fas fa-ellipsis-v" onclick="toggleViewMenu(event)"></i>
+                    <div class="dropdown-menu dropdown-right" id="viewDropdown">
+                        <div class="dropdown-header">Lihat</div>
+                        <div class="dropdown-item" onclick="changeLayout('kisi')"><i class="fas fa-th-large"></i> Tampilan Kisi</div>
+                        <div class="dropdown-item" onclick="changeLayout('daftar')"><i class="fas fa-list"></i> Tampilan Daftar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="search-container" id="searchContainer">
+            <input type="text" class="search-box" id="searchInput" placeholder="Cari catatan..." oninput="searchNotes()">
+        </div>
+
+        <div class="content-area">
+            <div class="notes-grid layout-kisi" id="notesGrid"></div>
+        </div>
+
+        <div class="fab" id="fabBtn" onclick="openModal()">
+            <i class="fas fa-pen"></i>
+        </div>
+
+        <div class="modal" id="noteModal">
+            <div class="modal-header">
+                <i class="fas fa-chevron-left" onclick="closeModal()"></i>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-plus" onclick="togglePlusMenu(event)" style="font-size: 20px; cursor: pointer;"></i>
+                        <div class="dropdown-menu dropdown-right" id="plusDropdown">
+                            <div class="dropdown-item" onclick="triggerImageUpload()"><i class="far fa-image"></i> Gambar</div>
+                            <div class="dropdown-item" onclick="openTableModal()"><i class="fas fa-table"></i> Tabel</div>
+                            <div class="dropdown-item" onclick="openCanvasModal()"><i class="fas fa-paint-brush"></i> Lukisan</div>
+                        </div>
+                    </div>
+                    <button class="btn-save" onclick="saveNote()">Simpan</button>
+                </div>
+            </div>
+            
+            <input type="text" class="input-title" id="noteTitle" placeholder="Judul">
+            <select class="select-folder" id="noteFolder">
+                <option value="Kerja">Kerja</option>
+                <option value="Pribadi">Pribadi</option>
+                <option value="Kuliah">Kuliah</option>
+            </select>
+
+            <div class="editor-toolbar">
+                <button type="button" onclick="formatDoc('bold')" title="Tebal"><i class="fas fa-bold"></i></button>
+                <button type="button" onclick="formatDoc('italic')" title="Miring"><i class="fas fa-italic"></i></button>
+                <button type="button" onclick="formatDoc('underline')" title="Garis Bawah"><i class="fas fa-underline"></i></button>
+                <button type="button" onclick="formatDoc('insertUnorderedList')" title="List"><i class="fas fa-list-ul"></i></button>
+            </div>
+
+            <div class="input-body-rich" id="noteBody" contenteditable="true" placeholder="Mulai menulis catatan..."></div>
+            
+            <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="insertImage(event)">
+        </div>
+
+        <div class="sub-modal" id="tableModal">
+            <div class="sub-modal-content">
+                <h4>Properti tabel</h4>
+                <div class="table-prop-row">
+                    <label><i class="fas fa-th-list"></i> Baris</label>
+                    <input type="number" id="tableRows" value="3" min="1" max="10">
+                </div>
+                <div class="table-prop-row">
+                    <label><i class="fas fa-columns"></i> Kolom</label>
+                    <input type="number" id="tableCols" value="2" min="1" max="5">
+                </div>
+                <div class="sub-modal-buttons">
+                    <button onclick="closeTableModal()">Batal</button>
+                    <button onclick="insertTable()" style="color: var(--accent-color); font-weight: bold;">Selesai</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-modal" id="canvasModal" style="padding: 0;">
+            <div class="canvas-container">
+                <div class="canvas-header">
+                    <button onclick="closeCanvasModal()"><i class="fas fa-times"></i></button>
+                    <div class="canvas-colors">
+                        <div class="color-dot active" style="background: #85929E;" onclick="changeCanvasColor('#85929E', this)"></div>
+                        <div class="color-dot" style="background: #2ecc71;" onclick="changeCanvasColor('#2ecc71', this)"></div>
+                        <div class="color-dot" style="background: #e74c3c;" onclick="changeCanvasColor('#e74c3c', this)"></div>
+                        <div class="color-dot" style="background: #2980b9;" onclick="changeCanvasColor('#2980b9', this)"></div>
+                        <div class="color-dot" style="background: #f1c40f;" onclick="changeCanvasColor('#f1c40f', this)"></div>
+                    </div>
+                    <button onclick="clearCanvas()" title="Bersihkan"><i class="fas fa-eraser"></i></button>
+                </div>
+                <canvas id="paintCanvas"></canvas>
+                <div class="canvas-footer">
+                    <button onclick="closeCanvasModal()">Batal</button>
+                    <button onclick="saveCanvasDrawing()" style="color: var(--accent-color); font-weight: bold;">Selesai</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
