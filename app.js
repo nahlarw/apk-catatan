@@ -1,7 +1,4 @@
-let notes = JSON.parse(localStorage.getItem('notes')) || [
-    { id: 1, title: 'Tugas Kuliah', body: '<b>Penting!</b> Jangan lupa review materi basis data.', date: '24/05', folder: 'Kuliah', favorite: true, inTrash: false },
-    { id: 2, title: 'Belanja Bulanan', body: 'Kopi, susu, dan camilan.', date: '22/05', folder: 'Pribadi', favorite: false, inTrash: false }
-];
+let notes = JSON.parse(localStorage.getItem('notes')) || [];
 
 let currentFilter = 'all';
 let editingNoteId = null;
