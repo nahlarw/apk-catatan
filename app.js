@@ -190,7 +190,7 @@ function saveCanvasDrawing() {
 // STRUKTUR RESERVED DEFAULT CRUD APLIKASI
 function saveNote() {
     const title = document.getElementById('noteTitle').value.trim();
-    const body = document.getElementById('noteBody').innerHTML.trim(); // Mengambil HTML Rich Text, bukan value biasa
+    const body = document.getElementById('noteBody').innerHTML.trim();
     const folder = document.getElementById('noteFolder').value;
     
     if (!title && (body === '' || body === '<br>')) { closeModal(); return; }
@@ -204,7 +204,6 @@ function saveNote() {
             notes[idx].title = title;
             notes[idx].body = body;
             notes[idx].folder = folder;
-            notes[idx].date = dateString;
         }
     } else {
         notes.unshift({ id: Date.now(), title, body, folder, date: dateString, favorite: false, inTrash: false });
