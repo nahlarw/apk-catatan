@@ -126,20 +126,17 @@ function insertTable() {
 function initCanvas() {
     canvas = document.getElementById('paintCanvas');
     ctx = canvas.getContext('2d');
-    
-    // Set resolusi internal canvas berdasarkan ukuran layarnya
+
     canvas.width = 380;
     canvas.height = 600;
 
     ctx.lineCap = 'round';
     ctx.lineWidth = 5;
 
-    // Deteksi Mouse (Laptop)
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
 
-    // Deteksi Sentuhan (Handphone)
     canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); });
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); }, { passive: false });
     canvas.addEventListener('touchend', stopDrawing);
@@ -190,7 +187,7 @@ function saveCanvasDrawing() {
 // STRUKTUR RESERVED DEFAULT CRUD APLIKASI
 function saveNote() {
     const title = document.getElementById('noteTitle').value.trim();
-    const body = document.getElementById('noteBody').innerHTML.trim();
+    const body = document.getElementById('noteBody').innerHTML.trim(); // Mengambil HTML Rich Text, bukan value biasa
     const folder = document.getElementById('noteFolder').value;
     
     if (!title && (body === '' || body === '<br>')) { closeModal(); return; }
@@ -212,7 +209,7 @@ function saveNote() {
     closeModal();
 }
 
-function deleteNote(id, event) { event.stopPropagation(); const n = notes.find(n => n.id === id); if (n) { n.inTrash = true; n.favorite = false; saveData(); } }
+function deleteNote(id, event) { event.stopPropagation(); if (confirm("Apakah kamu yakin ingin menghapus catatan ini?")) {const n = notes.find(n => n.id === id); if (n) { n.inTrash = true; n.favorite = false; saveData(); } } }
 function restoreNote(id, event) { event.stopPropagation(); const n = notes.find(n => n.id === id); if (n) { n.inTrash = false; saveData(); } }
 function permaDeleteNote(id, event) { event.stopPropagation(); if(confirm("Hapus permanen?")) { notes = notes.filter(n => n.id !== id); saveData(); } }
 
@@ -271,6 +268,8 @@ function openModal() {
     document.getElementById('noteBody').innerHTML = '';
     document.getElementById('noteFolder').value = 'Kerja';
     document.getElementById('noteModal').classList.add('open');
+
+    history.pushState({ modalOpen: true }, '');
 }
 
 function editNote(id) {
@@ -281,6 +280,8 @@ function editNote(id) {
         document.getElementById('noteBody').innerHTML = n.body;
         document.getElementById('noteFolder').value = n.folder;
         document.getElementById('noteModal').classList.add('open');
+
+        history.pushState({ modalOpen: true }, '');
     }
 }
 function closeModal() { document.getElementById('noteModal').classList.remove('open'); }
@@ -303,3 +304,10 @@ window.onclick = function(event) {
         closeAllMenus();
     }
 }
+
+window.addEventListener('popstate', function (event) {
+    const modal = document.getElementById('noteModal');
+    if (modal && modal.classList.contains('open')) {
+        modal.classList.remove('open');
+    }
+});
