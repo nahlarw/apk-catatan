@@ -123,90 +123,177 @@ function insertTable() {
 }
 
 // C. Sub-Fitur: Lukisan (Canvas Drawing)
+// C. Sub-Fitur: Lukisan (Canvas Drawing)
+let currentCanvasTool = 'pen';
+let canvasSize = 4;
+let canvasUndoStack = [];
+let canvasRedoStack = [];
+
 function initCanvas() {
     canvas = document.getElementById('paintCanvas');
     ctx = canvas.getContext('2d');
+    canvas.style.touchAction = 'none';
 
-    canvas.width = 380;
-    canvas.height = 600;
+    // Event Handler Universal (Mendukung mouse & touch Hp agar kursor tidak geser)
+    canvas.addEventListener('pointerdown', startDrawing);
+    canvas.addEventListener('pointermove', draw);
+    canvas.addEventListener('pointerup', stopDrawing);
+    canvas.addEventListener('pointerout', stopDrawing);
+}
+
+function resizeCanvasToDisplay() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
     ctx.lineCap = 'round';
-    ctx.lineWidth = 5;
-
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-
-    canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); });
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); }, { passive: false });
-    canvas.addEventListener('touchend', stopDrawing);
+    ctx.lineJoin = 'round';
 }
 
 function openCanvasModal() {
     document.getElementById('canvasModal').style.display = 'flex';
     document.getElementById('plusDropdown').classList.remove('show');
-    clearCanvas();
+    
+    resizeCanvasToDisplay();
+    
+    // Reset data riwayat coretan setiap kali kanvas baru dibuka
+    canvasUndoStack = [];
+    canvasRedoStack = [];
+    saveCanvasState(); // Simpan kondisi awal kanvas kosong
+    
+    selectCanvasTool('pen');
 }
-function closeCanvasModal() { document.getElementById('canvasModal').style.display = 'none'; }
+
+function closeCanvasModal() { 
+    document.getElementById('canvasModal').style.display = 'none'; 
+}
+
+// Menyimpan snapshot gambar saat ini untuk fitur Undo/Redo
+function saveCanvasState() {
+    if (canvasUndoStack.length >= 20) canvasUndoStack.shift(); // Batasi maksimal 20 history memori
+    canvasUndoStack.push(canvas.toDataURL());
+    canvasRedoStack = []; // Reset setiap ada coretan baru
+}
+
+// Fungsi Mengembalikan Gambaran Sebelumnya (UNDO)
+function undoCanvas() {
+    if (canvasUndoStack.length > 1) {
+        canvasRedoStack.push(canvasUndoStack.pop());
+        const previousState = canvasUndoStack[canvasUndoStack.length - 1];
+        restoreCanvasState(previousState);
+    }
+}
+
+// Fungsi Maju ke Gambaran Depannya (REDO)
+function redoCanvas() {
+    if (canvasRedoStack.length > 0) {
+        const nextState = canvasRedoStack.pop();
+        canvasUndoStack.push(nextState);
+        restoreCanvasState(nextState);
+    }
+}
+
+function restoreCanvasState(dataUrl) {
+    const img = new Image();
+    img.src = dataUrl;
+    img.onload = function() {
+        ctx.globalCompositeOperation = 'source-over'; // Normalisasi komposit saat menimpa state
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        // Kembalikan ke tool aktif semula setelah merestore gambar
+        selectCanvasTool(currentCanvasTool);
+    };
+}
+
+// Mengatur pilihan mode alat (Pen, Kuas, Eraser)
+function selectCanvasTool(tool) {
+    currentCanvasTool = tool;
+    
+    const penEl = document.getElementById('penTool');
+    const brushEl = document.getElementById('brushTool');
+    const eraserEl = document.getElementById('eraserTool');
+
+    // Reset warna text ikon tool di bawah
+    if(penEl) penEl.style.color = "#aaa";
+    if(brushEl) brushEl.style.color = "#aaa";
+    if(eraserEl) eraserEl.style.color = "#aaa";
+
+    if (tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        canvasSize = 24; // Penghapus dibuat tebal
+        if(eraserEl) eraserEl.style.color = "#fff";
+    } else if (tool === 'brush') {
+        ctx.globalCompositeOperation = 'source-over';
+        canvasSize = 12; // Mode kuas dibuat tebal meliuk
+        if(brushEl) brushEl.style.color = "#fff";
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        canvasSize = 4;  // Mode pulpen tipis presisi
+        if(penEl) penEl.style.color = "#fff";
+    }
+}
 
 function startDrawing(e) {
     isDrawing = true;
     ctx.beginPath();
+    
     const rect = canvas.getBoundingClientRect();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    ctx.moveTo(x, y);
 }
 
 function draw(e) {
     if (!isDrawing) return;
-    ctx.strokeStyle = currentColor;
+    
     const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.lineWidth = canvasSize;
+    ctx.strokeStyle = currentColor;
+    
+    ctx.lineTo(x, y);
     ctx.stroke();
 }
 
-function stopDrawing() { isDrawing = false; }
+function stopDrawing() { 
+    if (isDrawing) {
+        isDrawing = false; 
+        ctx.beginPath();
+        saveCanvasState(); // Simpan coretan ke history setelah jari diangkat
+    }
+}
 
 function changeCanvasColor(color, element) {
+    // Jika warna diklik saat pakai penghapus, otomatis balikkan ke mode pulpen aktif
+    if (currentCanvasTool === 'eraser') {
+        selectCanvasTool('pen');
+    }
+    
     currentColor = color;
-    document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+    document.querySelectorAll('.color-dot').forEach(dot => {
+        dot.classList.remove('active');
+        dot.style.border = 'none';
+    });
     element.classList.add('active');
+    element.style.border = '2px solid #fff';
 }
 
 function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    saveCanvasState(); // Catat history papan kosong
 }
 
 function saveCanvasDrawing() {
     const dataURL = canvas.toDataURL();
-    const imgHtml = `<img src="${dataURL}" class="canvas-drawn-img" style="border:1px solid #ddd;"><div><br></div>`;
+    ctx.globalCompositeOperation = 'source-over';
+    
+    const imgHtml = `<img src="${dataURL}" class="canvas-drawn-img" style="max-width:100%; height:auto; border:1px solid #ddd; display:block; margin:8px 0;"><div><br></div>`;
     document.getElementById('noteBody').focus();
     document.execCommand('insertHTML', false, imgHtml);
     closeCanvasModal();
-}
-
-// STRUKTUR RESERVED DEFAULT CRUD APLIKASI
-function saveNote() {
-    const title = document.getElementById('noteTitle').value.trim();
-    const body = document.getElementById('noteBody').innerHTML.trim(); // Mengambil HTML Rich Text, bukan value biasa
-    const folder = document.getElementById('noteFolder').value;
-    
-    if (!title && (body === '' || body === '<br>')) { closeModal(); return; }
-
-    const today = new Date();
-    const dateString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}`;
-
-    if (editingNoteId) {
-        const idx = notes.findIndex(n => n.id === editingNoteId);
-        if (idx !== -1) {
-            notes[idx].title = title;
-            notes[idx].body = body;
-            notes[idx].folder = folder;
-        }
-    } else {
-        notes.unshift({ id: Date.now(), title, body, folder, date: dateString, favorite: false, inTrash: false });
-    }
-    saveData();
-    closeModal();
 }
 
 function deleteNote(id, event) { event.stopPropagation(); if (confirm("Apakah kamu yakin ingin menghapus catatan ini?")) {const n = notes.find(n => n.id === id); if (n) { n.inTrash = true; n.favorite = false; saveData(); } } }
