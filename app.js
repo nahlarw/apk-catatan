@@ -3,7 +3,6 @@ let notes = JSON.parse(localStorage.getItem('notes')) || [];
 let currentFilter = 'all';
 let editingNoteId = null;
 
-// Variabel untuk fitur Gambar & Lukisan (Canvas)
 let canvas, ctx, isDrawing = false;
 let currentColor = '#85929E';
 
@@ -12,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.className = savedTheme === 'dark' ? 'theme-dark' : 'theme-light';
     const savedLayout = localStorage.getItem('appLayout') || 'kisi';
     changeLayout(savedLayout);
-
     renderNotes();
     updateCounters();
     initCanvas();
@@ -31,10 +29,13 @@ function renderNotes(filteredNotes = null) {
         else dataToRender = notes.filter(n => n.folder === currentFilter && !n.inTrash);
     }
 
-    dataToRender.sort((a, b) => b.favorite - a.favorite);
+    dataToRender.sort((a, b) => {
+    if (b.favorite !== a.favorite) {return b.favorite - a.favorite;
+    }
+    return (b.createdAt || 0) - (a.createdAt || 0);
+});
 
-    if (dataToRender.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); margin-top: 40px; font-size: 14px;">Tidak ada catatan</div>`;
+    if (dataToRender.length === 0) {grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); margin-top: 40px; font-size: 14px;">Tidak ada catatan</div>`;
         return;
     }
 
@@ -42,7 +43,6 @@ function renderNotes(filteredNotes = null) {
         const card = document.createElement('div');
         card.className = 'note-card';
         if (!note.inTrash) card.onclick = () => editNote(note.id);
-        
         let actionButtons = note.inTrash ? `
             <i class="fas fa-undo-alt restore-btn" onclick="restoreNote(${note.id}, event)"></i>
             <i class="far fa-trash-alt delete-btn" onclick="permaDeleteNote(${note.id}, event)"></i>
@@ -50,7 +50,6 @@ function renderNotes(filteredNotes = null) {
             <i class="${note.favorite ? 'fas' : 'far'} fa-star" style="color: ${note.favorite ? '#f1c40f' : 'inherit'};" onclick="toggleFavorite(${note.id}, event)"></i>
             <i class="far fa-trash-alt delete-btn" onclick="deleteNote(${note.id}, event)"></i>
         `;
-
         card.innerHTML = `
             <div>
                 <div class="note-title">${note.title || 'Tanpa Judul'}</div>
@@ -65,19 +64,16 @@ function renderNotes(filteredNotes = null) {
     });
 }
 
-// 1. FITUR BARU: EDIT PENULISAN (Rich Text Format)
 function formatDoc(command) {
     document.execCommand(command, false, null);
     document.getElementById('noteBody').focus();
 }
 
-// 2. FITUR BARU: MANAJEMEN PLUS MENU (LALUAN INPUT)
 function togglePlusMenu(e) {
     e.stopPropagation();
     document.getElementById('plusDropdown').classList.toggle('show');
 }
 
-// A. Sub-Fitur: Tambah Gambar
 function triggerImageUpload() {
     document.getElementById('imageInput').click();
     document.getElementById('plusDropdown').classList.remove('show');
@@ -96,7 +92,6 @@ function insertImage(event) {
     }
 }
 
-// B. Sub-Fitur: Tambah Tabel
 function openTableModal() {
     document.getElementById('tableModal').style.display = 'flex';
     document.getElementById('plusDropdown').classList.remove('show');
@@ -106,7 +101,6 @@ function closeTableModal() { document.getElementById('tableModal').style.display
 function insertTable() {
     const rows = document.getElementById('tableRows').value;
     const cols = document.getElementById('tableCols').value;
-    
     let tableHtml = '<table>';
     for (let i = 0; i < rows; i++) {
         tableHtml += '<tr>';
@@ -116,14 +110,11 @@ function insertTable() {
         tableHtml += '</tr>';
     }
     tableHtml += '</table><div><br></div>';
-    
     document.getElementById('noteBody').focus();
     document.execCommand('insertHTML', false, tableHtml);
     closeTableModal();
 }
 
-// C. Sub-Fitur: Lukisan (Canvas Drawing)
-// C. Sub-Fitur: Lukisan (Canvas Drawing)
 let currentCanvasTool = 'pen';
 let canvasSize = 4;
 let canvasUndoStack = [];
@@ -133,8 +124,6 @@ function initCanvas() {
     canvas = document.getElementById('paintCanvas');
     ctx = canvas.getContext('2d');
     canvas.style.touchAction = 'none';
-
-    // Event Handler Universal (Mendukung mouse & touch Hp agar kursor tidak geser)
     canvas.addEventListener('pointerdown', startDrawing);
     canvas.addEventListener('pointermove', draw);
     canvas.addEventListener('pointerup', stopDrawing);
@@ -145,7 +134,6 @@ function resizeCanvasToDisplay() {
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 }
@@ -153,14 +141,10 @@ function resizeCanvasToDisplay() {
 function openCanvasModal() {
     document.getElementById('canvasModal').style.display = 'flex';
     document.getElementById('plusDropdown').classList.remove('show');
-    
     resizeCanvasToDisplay();
-    
-    // Reset data riwayat coretan setiap kali kanvas baru dibuka
     canvasUndoStack = [];
     canvasRedoStack = [];
     saveCanvasState(); // Simpan kondisi awal kanvas kosong
-    
     selectCanvasTool('pen');
 }
 
@@ -168,14 +152,12 @@ function closeCanvasModal() {
     document.getElementById('canvasModal').style.display = 'none'; 
 }
 
-// Menyimpan snapshot gambar saat ini untuk fitur Undo/Redo
 function saveCanvasState() {
     if (canvasUndoStack.length >= 20) canvasUndoStack.shift(); // Batasi maksimal 20 history memori
     canvasUndoStack.push(canvas.toDataURL());
     canvasRedoStack = []; // Reset setiap ada coretan baru
 }
 
-// Fungsi Mengembalikan Gambaran Sebelumnya (UNDO)
 function undoCanvas() {
     if (canvasUndoStack.length > 1) {
         canvasRedoStack.push(canvasUndoStack.pop());
@@ -184,7 +166,6 @@ function undoCanvas() {
     }
 }
 
-// Fungsi Maju ke Gambaran Depannya (REDO)
 function redoCanvas() {
     if (canvasRedoStack.length > 0) {
         const nextState = canvasRedoStack.pop();
@@ -200,7 +181,6 @@ function restoreCanvasState(dataUrl) {
         ctx.globalCompositeOperation = 'source-over'; // Normalisasi komposit saat menimpa state
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
-        // Kembalikan ke tool aktif semula setelah merestore gambar
         selectCanvasTool(currentCanvasTool);
     };
 }
@@ -208,12 +188,9 @@ function restoreCanvasState(dataUrl) {
 // Mengatur pilihan mode alat (Pen, Kuas, Eraser)
 function selectCanvasTool(tool) {
     currentCanvasTool = tool;
-    
     const penEl = document.getElementById('penTool');
     const brushEl = document.getElementById('brushTool');
     const eraserEl = document.getElementById('eraserTool');
-
-    // Reset warna text ikon tool di bawah
     if(penEl) penEl.style.color = "#aaa";
     if(brushEl) brushEl.style.color = "#aaa";
     if(eraserEl) eraserEl.style.color = "#aaa";
@@ -236,24 +213,19 @@ function selectCanvasTool(tool) {
 function startDrawing(e) {
     isDrawing = true;
     ctx.beginPath();
-    
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
     ctx.moveTo(x, y);
 }
 
 function draw(e) {
     if (!isDrawing) return;
-    
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
     ctx.lineWidth = canvasSize;
     ctx.strokeStyle = currentColor;
-    
     ctx.lineTo(x, y);
     ctx.stroke();
 }
@@ -267,11 +239,9 @@ function stopDrawing() {
 }
 
 function changeCanvasColor(color, element) {
-    // Jika warna diklik saat pakai penghapus, otomatis balikkan ke mode pulpen aktif
     if (currentCanvasTool === 'eraser') {
         selectCanvasTool('pen');
     }
-    
     currentColor = color;
     document.querySelectorAll('.color-dot').forEach(dot => {
         dot.classList.remove('active');
@@ -289,7 +259,6 @@ function clearCanvas() {
 function saveCanvasDrawing() {
     const dataURL = canvas.toDataURL();
     ctx.globalCompositeOperation = 'source-over';
-    
     const imgHtml = `<img src="${dataURL}" class="canvas-drawn-img" style="max-width:100%; height:auto; border:1px solid #ddd; display:block; margin:8px 0;"><div><br></div>`;
     document.getElementById('noteBody').focus();
     document.execCommand('insertHTML', false, imgHtml);
@@ -333,7 +302,6 @@ function changeLayout(l) {const grid = document.getElementById('notesGrid');
     closeAllMenus(); 
 }
 
-// Pengontrol Dropdown & Penutup Otomatis Aman
 function toggleSettingsMenu(e) { e.stopPropagation(); document.getElementById('viewDropdown').classList.remove('show'); document.getElementById('settingsDropdown').classList.toggle('show'); }
 var plusDrop = document.getElementById('plusDropdown');
 function toggleViewMenu(e) { e.stopPropagation(); document.getElementById('settingsDropdown').classList.remove('show'); document.getElementById('viewDropdown').classList.toggle('show'); }
@@ -355,7 +323,6 @@ function openModal() {
     document.getElementById('noteBody').innerHTML = '';
     document.getElementById('noteFolder').value = 'Kerja';
     document.getElementById('noteModal').classList.add('open');
-
     history.pushState({ modalOpen: true }, '');
 }
 
@@ -367,7 +334,6 @@ function editNote(id) {
         document.getElementById('noteBody').innerHTML = n.body;
         document.getElementById('noteFolder').value = n.folder;
         document.getElementById('noteModal').classList.add('open');
-
         history.pushState({ modalOpen: true }, '');
     }
 }
@@ -398,3 +364,20 @@ window.addEventListener('popstate', function (event) {
         modal.classList.remove('open');
     }
 });
+
+function saveNote() {
+    const title = document.getElementById('noteTitle').value.trim();
+    const body = document.getElementById('noteBody').innerHTML.trim();
+    const folder = document.getElementById('noteFolder').value;
+    if (title === '' && body === '') {alert('Catatan masih kosong!');
+        return;
+    }
+    if (editingNoteId) {const note = notes.find(n => n.id === editingNoteId);
+
+        if (note) {note.title = title; note.body = body; note.folder = folder;}
+    } else {
+        notes.push({id: Date.now(), title, body, folder, favorite: false, inTrash: false, date: new Date().toLocaleDateString('id-ID'), createdAt: Date.now()});
+    }
+    saveData();
+    closeModal();
+}
